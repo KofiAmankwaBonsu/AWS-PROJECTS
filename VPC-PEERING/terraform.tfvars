@@ -1,0 +1,9 @@
+aws_region            = "us-east-1"
+requester_vpc_cidr    = "10.0.0.0/16"
+accepter_vpc_cidr     = "172.16.0.0/16"
+requester_subnet_cidr = "10.0.1.0/24"
+accepter_subnet_cidr  = "172.16.1.0/24"
+ami_id                = "ami-0453ec754f44f9a4a"
+instance_type         = "t2.micro"
+key_name              = "my-key-pair"
+availability_zones    = ["us-east-1a", "us-east-1b"]
