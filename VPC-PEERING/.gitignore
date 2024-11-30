@@ -6,5 +6,5 @@
 # Ignore Terraform plan output 
 *.tfplan 
 *.tfstate 
-# Ignore tfvars
-*.tfvars
+# Ignore hcl
+*.hcl
