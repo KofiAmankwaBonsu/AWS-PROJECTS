@@ -1,0 +1,10 @@
+# Ignore Terraform state files 
+*.tfstate 
+*.tfstate.* 
+# Ignore backup files 
+*.bak 
+# Ignore Terraform plan output 
+*.tfplan 
+*.tfstate 
+# Ignore tfvars
+*.tfvars
