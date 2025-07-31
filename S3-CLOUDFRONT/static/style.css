@@ -1,0 +1,120 @@
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    color: #fff;
+    background: linear-gradient(135deg, #1e3c72, #2a5298); /* Gradient background */
+    background-attachment: fixed;
+    background-size: cover;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Header Styling */
+.header {
+    text-align: center;
+    padding: 20px 0;
+    background: rgba(0, 0, 0, 0.7); /* Semi-transparent header */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    color: #fdbb2d; /* Accent color */
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Main Content Styling */
+.main-content {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.6); /* Transparent background for text */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Video Section */
+.video-section {
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+}
+
+#video-player {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-width: 800px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    outline: none;
+    
+    
+}
+
+/* Description Section */
+.description {
+    text-align: left;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.description h2 {
+    color: #fdbb2d; /* Accent color */
+    margin-bottom: 10px;
+}
+
+.description p {
+    font-size: 1.1rem;
+}
+
+/* Footer Styling */
+.footer {
+    text-align: center;
+    padding: 15px 0;
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer p {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 15px;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .description h2 {
+        font-size: 1.5rem;
+    }
+
+    .description p {
+        font-size: 1rem;
+    }
+}

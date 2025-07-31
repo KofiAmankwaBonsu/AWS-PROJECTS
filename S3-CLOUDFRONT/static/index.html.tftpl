@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Streaming Page</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <h1>My Video Streaming Page</h1>
+  </header>
+
+  <main class="main-content">
+    <section class="video-section">
+        <video id="video-player" controls width="100%" height="auto">
+          <source src="https://${domain}/${videoKey}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </section>
+    <section class="description">
+      <h2>About this Video</h2>
+      <p>
+        This is a sample video streamed directly from AWS S3 using CORS. Enjoy the seamless viewing experience!
+      </p>
+    </section>
+  </main>
+
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+            const videoPlayer = document.getElementById('video-player');
+            
+            // Add error handling
+            videoPlayer.onerror = function() {
+                console.error('Video error:', videoPlayer.error);
+                console.error('Video URL:', videoPlayer.querySelector('source').src);
+            };
+
+            // Add load success handling
+            videoPlayer.onloadeddata = function() {
+                console.log('Video loaded successfully');
+            };
+        });
+</script>
+  <footer class="footer">
+    <p>&copy; 2024 My Video Webpage</p>
+  </footer>
+</body>
+</html>
