@@ -1,62 +1,275 @@
-# AWS Organization Accounts Setup
+# AWS Organization with SSO and Service Control Policies
 
-This project is designed to create and manage multiple AWS accounts using Terraform within an AWS Organization. It includes configurations for three distinct environments: Production (Prod), Non-Production (NonProd), and Security.
+This project creates and manages an AWS Organization with multiple accounts, IAM Identity Center (SSO), and Service Control Policies using Terraform. It demonstrates centralized account management, cross-account access, and governance controls.
+
+## Architecture Overview
+
+The solution creates:
+- **AWS Organization** with centralized management
+- **Two AWS Accounts**: Production and Security
+- **IAM Identity Center (SSO)** for centralized authentication
+- **Service Control Policies (SCPs)** for governance
+- **Cross-account access** with permission sets
 
 ## Project Structure
 
-The project is organized as follows:
+```
+aws-organization/
+├── aws-org-accounts/
+│   ├── modules/
+│   │   └── account/
+│   │       ├── main.tf          # Account and OU creation logic
+│   │       ├── variables.tf     # Module input variables
+│   │       └── outputs.tf       # Module outputs (account IDs, OU IDs)
+│   ├── prod/
+│   │   ├── main.tf              # Production account resources
+│   │   ├── variables.tf         # Prod-specific variables
+│   │   ├── providers.tf         # AWS provider configuration
+│   │   └── backend.tf           # Terraform backend configuration
+│   ├── security/
+│   │   ├── main.tf              # Security account resources
+│   │   ├── variables.tf         # Security-specific variables
+│   │   ├── providers.tf         # AWS provider configuration
+│   │   └── backend.tf           # Terraform backend configuration
+│   ├── main.tf                  # Organization, SSO, and account creation
+│   ├── variables.tf             # Global variables
+│   ├── outputs.tf               # Account IDs and SSO portal URL
+│   ├── providers.tf             # AWS provider with version constraints
+│   ├── backend.tf               # S3 backend configuration
+│   ├── terraform.tfvars.example # Example variable values
+│   └── .gitignore               # Git ignore patterns
+└── README.md                    # This file
+```
+NB: Terraform config for respective accounts to provision resources is not included in this repo but you can add this by looking at the project structure above.
 
-```
-aws-org-accounts
-├── modules
-│   └── account
-│       ├── main.tf          # Main configuration for creating an AWS account
-│       ├── variables.tf     # Input variables for the account module
-│       └── outputs.tf       # Outputs of the account module
-├── environments
-│   ├── prod
-│   │   └── main.tf          # Configuration for the Production environment
-│   ├── nonprod
-│   │   └── main.tf          # Configuration for the Non-Production environment
-│   └── security
-│       └── main.tf          # Configuration for the Security environment
-├── main.tf                  # Entry point for the Terraform configuration
-├── variables.tf             # Global input variables for the project
-├── outputs.tf               # Global outputs for the project
-├── terraform.tfvars         # Variable values for the Terraform project
-└── README.md                # Documentation for the project
-```
+## Features
+
+### 🏢 **Organization Management**
+- Creates AWS Organization with full feature set
+- Organizational Units (OUs) for logical grouping
+- Centralized billing and management
+
+### 🔐 **IAM Identity Center (SSO)**
+- Centralized user authentication
+- Permission sets with different access levels
+- Cross-account access without IAM users
+- Session duration controls (1-12 hours)
+
+### 📋 **Service Control Policies**
+- Preventive guardrails for accounts
+- Restricts expensive services (SageMaker, Redshift, EMR)
+- Applied at OU level for inheritance
+
+### 🔄 **Cross-Account Access**
+- Security team can access both accounts
+- Admin access to Security account
+- Read-only access to Production account
+
+## Prerequisites
+
+1. **Terraform** >= 1.0 installed
+2. **AWS CLI** configured with appropriate credentials
+3. **AWS Account** with Organizations permissions
+4. **S3 bucket** for Terraform state (optional but recommended)
+
+## Required AWS Permissions
+
+Your AWS user/role needs:
+- `OrganizationsFullAccess`
+- `AWSSSOServiceRolePolicy` 
+- `IAMFullAccess`
+- `S3` access for state storage
 
 ## Setup Instructions
 
-1. **Prerequisites**: Ensure you have Terraform installed and configured on your machine. You will also need AWS credentials with permissions to create accounts in AWS Organizations.
+### 1. Clone and Configure
+```bash
+git clone <repository-url>
+cd aws-organization/aws-org-accounts
+```
 
-2. **Clone the Repository**: Clone this repository to your local machine.
+### 2. Configure Variables
+```bash
+# Copy example file
+cp terraform.tfvars.example terraform.tfvars
 
-3. **Configure Variables**: Update the `terraform.tfvars` file with your specific values for account names, emails, and any other necessary configurations.
+# Edit with your values
+nano terraform.tfvars
+```
 
-4. **Initialize Terraform**: Navigate to the project directory and run:
-   ```
-   terraform init
-   ```
+**Required variables:**
+```hcl
+account_emails = {
+  prod     = "prod@yourcompany.com"
+  security = "security@yourcompany.com"
+}
 
-5. **Plan the Deployment**: To see what resources will be created, run:
-   ```
-   terraform plan
-   ```
+accounts = {
+  prod = {
+    organizational_unit = "ProdOU"
+    environment        = "prod"
+  }
+  security = {
+    organizational_unit = "SecurityOU"
+    environment        = "security"
+  }
+}
 
-6. **Apply the Configuration**: To create the accounts, run:
-   ```
-   terraform apply
-   ```
+demo_user_email = "user@yourcompany.com"
+```
 
-7. **Outputs**: After the apply completes, you can view the outputs defined in the `outputs.tf` files to get information about the created accounts.
+### 3. Enable IAM Identity Center
+```bash
+# Enable SSO manually in AWS Console first
+# Go to IAM Identity Center → Enable
+```
 
-## Usage Guidelines
+### 4. Deploy Infrastructure
+```bash
+# Initialize Terraform
+terraform init
 
-- Each environment (Prod, NonProd, Security) has its own configuration file that calls the account module. You can modify these files to customize the account creation process for each environment.
-- The `modules/account` directory contains reusable Terraform code for creating AWS accounts, which can be referenced in the environment-specific configurations.
+# Review planned changes
+terraform plan
+
+# Apply configuration
+terraform apply
+```
+
+### 5. Access SSO Portal
+After deployment, find your SSO portal URL in the outputs:
+```bash
+terraform output sso_portal_url
+```
+
+## Usage
+
+### SSO Login Flow
+1. User receives email invitation
+2. Sets up password and MFA (if enabled)
+3. Accesses portal at `https://d-xxxxxxxxxx.awsapps.com/start`
+4. Selects account and role
+5. Gets temporary AWS credentials
+
+### Account Access Matrix
+| User Group | Security Account | Production Account |
+|------------|------------------|-------------------|
+| SecurityTeam | Admin Access (8h) | ReadOnly Access (4h) |
+
+### Service Restrictions
+The Security account has SCP restrictions preventing:
+- Amazon SageMaker usage
+- Amazon Redshift usage  
+- Amazon EMR usage
+
+## Management
+
+### Adding New Accounts
+1. Update `terraform.tfvars`:
+```hcl
+accounts = {
+  prod = { ... }
+  security = { ... }
+  dev = {
+    organizational_unit = "DevOU"
+    environment        = "development"
+  }
+}
+
+account_emails = {
+  # ... existing emails
+  dev = "dev@yourcompany.com"
+}
+```
+
+2. Apply changes:
+```bash
+terraform apply
+```
+
+### Modifying SCPs
+Edit the policy in `main.tf`:
+```hcl
+resource "aws_organizations_policy" "security_restricted_access" {
+  # Add/remove restricted services
+}
+```
+
+### Managing SSO Users
+- Add users via AWS Console or additional Terraform resources
+- Assign users to groups for easier management
+- Configure MFA requirements in SSO settings
+
+## Cost Considerations
+
+### Free Components
+- AWS Organizations (free)
+- Multiple AWS accounts (free when empty)
+- IAM Identity Center (free up to 5,000 users)
+- Service Control Policies (free)
+
+### Potential Costs
+- Resources deployed in accounts (EC2, S3, etc.)
+- Cross-account data transfer
+- CloudTrail organization trail (~$3/month)
+
+## Security Best Practices
+
+- ✅ Use unique email addresses for each account
+- ✅ Enable MFA for all SSO users
+- ✅ Implement least-privilege permission sets
+- ✅ Regular access reviews and cleanup
+- ✅ Monitor with CloudTrail and Config
+- ✅ Use SCPs for preventive controls
+
+## Troubleshooting
+
+### Common Issues
+
+**SSO Permissions Error:**
+```bash
+# Add SSO permissions to your Terraform user
+aws iam attach-user-policy --user-name YourUser --policy-arn arn:aws:iam::aws:policy/AWSSSOServiceRolePolicy
+```
+
+**Account Deletion Fails:**
+```bash
+# Remove from Terraform state instead
+terraform state rm 'module.accounts["prod"].aws_organizations_account.account'
+```
+
+**SCP Not Working:**
+- Check if FullAWSAccess policy is attached
+- Detach FullAWSAccess from OU if present
+- Verify policy syntax and attachment
+
+## Cleanup
+
+⚠️ **Warning**: Account deletion requires manual steps
+
+### Option 1: Remove from State
+```bash
+terraform state rm 'module.accounts["prod"].aws_organizations_account.account'
+terraform state rm 'module.accounts["security"].aws_organizations_account.account'
+terraform destroy
+```
+
+### Option 2: Manual Cleanup
+1. Remove SSO assignments
+2. Remove accounts from organization (requires billing info)
+3. Delete organizational units
+4. Delete organization
 
 ## Contributing
 
-Feel free to submit issues or pull requests if you have suggestions or improvements for this project.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+
+## Support
+
+For issues and questions:
+- Create an issue in the repository
+- Check AWS Organizations documentation
+- Review Terraform AWS provider docs
