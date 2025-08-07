@@ -1,0 +1,55 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+terraform.tfplan.*
+
+# Lambda deployment packages
+*.zip
+
+# AWS credentials
+.aws/
+aws-credentials
+
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Log files
+*.log
+logs/
+/var/log/
+cron_log_backup.log
+
+# Backup files
+*.backup
+*.bak
+*.tar.gz
+log_backup_*.tar.gz
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+
