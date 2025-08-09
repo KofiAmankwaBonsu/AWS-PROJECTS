@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garbage Truck Fleet Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div class="header-content">
+                <i class="ri-truck-fill"></i>
+                <h1>Garbage Truck Fleet</h1>
+            </div>
+            <nav class="header-nav">
+                <button class="nav-button">
+                    <i class="ri-dashboard-line"></i>
+                    Dashboard
+                </button>
+                <button class="nav-button">
+                    <i class="ri-map-pin-line"></i>
+                    Track Fleet
+                </button>
+                <button class="nav-button"  id="addTruckBtn">
+                    <i class="ri-add-circle-line"></i>
+                    Add Truck
+                </button>
+            </nav>
+        </header>
+        
+        <div id="truckContainer" class="truck-container">
+            <!-- Truck cards will be populated here -->
+        </div>
+    </div>
+    <!--Add Truck Modal-->
+    <div id="addTruckModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="ri-truck-line"></i> Add New Truck</h2>
+                <span class="close"><i class="ri-close-line"></i></span>
+            </div>
+            <form id="addTruckForm" class="add-truck-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="truckId">Truck ID</label>
+                        <input type="text" id="truckId" required placeholder="e.g., T003">
+                    </div>
+                    <div class="form-group">
+                        <label for="driver">Driver Name</label>
+                        <input type="text" id="driver" required placeholder="Enter driver name">
+                    </div>
+                    <div class="form-group">
+                        <label for="route">Route</label>
+                        <input type="text" id="route" required placeholder="Enter route">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" required>
+                            <option value="Active">Active</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Off-Duty">Off-Duty</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Weight</label>
+                        <input type="text" id="weight" required placeholder="Enter weight">
+                    </div>                    
+                    <div class="form-group">
+                        <label for="currentLocation">Current Location</label>
+                        <input type="text" id="currentLocation" required placeholder="Enter current location">
+                    </div>
+                    <div class="form-group">
+                        <label for="fuelLevel">Fuel Level</label>
+                        <input type="text" id="fuelLevel" required placeholder="e.g., 75%">
+                    </div>
+                    <div class="form-group">
+                        <label for="nextMaintenance">Next Maintenance Date</label>
+                        <input type="date" id="nextMaintenance" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">
+                        <i class="ri-save-line"></i> Add Truck
+                    </button>
+                    <button type="button" class="cancel-btn">
+                        <i class="ri-close-line"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="ri-truck-line"></i> Truck Details</h2>
+                <span class="close"><i class="ri-close-line"></i></span>
+            </div>
+            <div id="truckDetails"></div>
+        </div>
+    </div>
+
+<script src="app.js"></script>
+</body>
+</html>
+
