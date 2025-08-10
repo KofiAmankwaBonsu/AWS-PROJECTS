@@ -1,0 +1,448 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Infrastructure for S3 to EFS DataSync with prerequisites"
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: "10.0.0.0/16"
+    Description: CIDR block for the VPC
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    Description: EC2 instance type
+
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-west-1a
+    Description: Availability Zone for the resources
+  
+  AmiID:
+    Type: AWS::EC2::Image::Id
+    Default: ami-0810e059735ce3a9d
+    Description: AMI ID for EC2 instance
+
+Resources:
+  # VPC and Networking
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock:
+        Ref: VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: DataSync-VPC
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: DataSync-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: VPC
+      InternetGatewayId:
+        Ref: InternetGateway
+
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPC
+      AvailabilityZone:
+        Ref: AvailabilityZone
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: DataSync-Subnet
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: VPC
+      Tags:
+        - Key: Name
+          Value: DataSync-RouteTable
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId:
+        Ref: RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: Subnet
+      RouteTableId:
+        Ref: RouteTable
+
+  # S3 Bucket
+  SourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: SourceBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                Fn::GetAtt: [DataSyncRole, Arn]
+            Action:
+              - s3:GetBucketLocation
+              - s3:ListBucket
+              - s3:ListBucketMultipartUploads
+              - s3:AbortMultipartUpload
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:GetObjectTagging
+              - s3:PutObject
+              - s3:PutObjectTagging
+              - s3:ListMultipartUploadParts
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Ref: SourceBucket
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Ref: SourceBucket
+                    - "/*"
+  # Security Groups
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EC2 instance
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: EC2-SecurityGroup
+
+  EfsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EFS mount targets
+      VpcId:
+        Ref: VPC
+      Tags:
+        - Key: Name
+          Value: EFS-SecurityGroup
+
+  DataSyncSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for DataSync
+      VpcId:
+        Ref: VPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: DataSync-SecurityGroup
+
+  # Security Group Rules
+  EfsSecurityGroupIngressFromEC2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: 
+        Ref: EfsSecurityGroup
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049
+      SourceSecurityGroupId:
+        Ref: EC2SecurityGroup
+
+  EfsSecurityGroupIngressFromDataSync:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: 
+        Ref: EfsSecurityGroup
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049
+      SourceSecurityGroupId:
+        Ref: DataSyncSecurityGroup
+
+  DataSyncSecurityGroupEgressToEfs:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: 
+        Ref: DataSyncSecurityGroup
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049
+      DestinationSecurityGroupId:
+        Ref: EfsSecurityGroup
+
+
+  # EFS File System
+  EfsFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+      FileSystemTags:
+        - Key: Name
+          Value: DataSync-EFS
+
+  EfsMountTarget:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: EfsFileSystem
+      SubnetId:
+        Ref: Subnet
+      SecurityGroups:
+        - Ref: EfsSecurityGroup
+ 
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientFullAccess
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: EC2InstanceRole
+
+  # EC2 Instance
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    DependsOn: EfsMountTarget
+    Properties:
+      IamInstanceProfile: 
+        Ref: EC2InstanceProfile
+      InstanceType:
+        Ref: InstanceType
+      ImageId: 
+        Ref: AmiID
+      SubnetId:
+        Ref: Subnet
+      SecurityGroupIds:
+        - Ref: EC2SecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+            - ''
+            - - "#!/bin/bash\n"
+              - "yum update -y\n"
+              - "yum install -y amazon-efs-utils nfs-utils\n"
+              - "mkdir -p /mnt/efs\n"
+              - "systemctl enable nfs-utils\n"
+              - "systemctl start nfs-utils\n"
+              - "systemctl enable rpcbind\n"
+              - "systemctl start rpcbind\n"
+              - "echo \""
+              - Ref: EfsFileSystem
+              - ".efs."
+              - Ref: 'AWS::Region'
+              - ".amazonaws.com:/ /mnt/efs efs defaults,_netdev 0 0\" >> /etc/fstab\n"  
+              - "mount -a\n"
+              - "until mount | grep /mnt/efs > /dev/null; do\n"
+              - "  echo 'Waiting for EFS mount to be available...'\n"
+              - "  sleep 5\n"
+              - "done\n"
+              - "chown -R ec2-user:ec2-user /mnt/efs\n"
+              - "chmod 755 /mnt/efs\n"
+      Tags:
+        - Key: Name
+          Value: EFS-Mount-Instance
+
+  # DataSync Components
+  DataSyncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: datasync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSDataSyncFullAccess
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:GetObject
+                  - s3:GetObjectTagging
+                Resource:
+                  - Fn::Join:
+                      - ""
+                      - - "arn:aws:s3:::"
+                        - Ref: SourceBucket
+                  - Fn::Join:
+                      - ""
+                      - - "arn:aws:s3:::"
+                        - Ref: SourceBucket
+                        - "/*"
+
+  S3Location:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::"
+            - Ref: SourceBucket
+      S3Config:
+        BucketAccessRoleArn:
+          Fn::GetAtt: [DataSyncRole, Arn]
+
+  EfsLocation:
+    Type: AWS::DataSync::LocationEFS
+    DependsOn: [EfsMountTarget, DataSyncSecurityGroupEgressToEfs]
+    Properties:
+      EfsFilesystemArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:elasticfilesystem:"
+            - Ref: "AWS::Region"
+            - ":"
+            - Ref: "AWS::AccountId"
+            - ":file-system/"
+            - Ref: EfsFileSystem
+      Ec2Config:
+        SecurityGroupArns:
+          - Fn::Join:
+              - ""
+              - - "arn:aws:ec2:"
+                - Ref: "AWS::Region"
+                - ":"
+                - Ref: "AWS::AccountId"
+                - ":security-group/"
+                - Ref: DataSyncSecurityGroup
+        SubnetArn:
+          Fn::Join:
+            - ""
+            - - "arn:aws:ec2:"
+              - Ref: "AWS::Region"
+              - ":"
+              - Ref: "AWS::AccountId"
+              - ":subnet/"
+              - Ref: Subnet
+      Subdirectory: "/"
+
+  DataSyncTask:
+    Type: AWS::DataSync::Task
+    Properties:
+      SourceLocationArn:
+        Fn::GetAtt: [S3Location, LocationArn]
+      DestinationLocationArn:
+        Fn::GetAtt: [EfsLocation, LocationArn]
+      Options:
+        VerifyMode: POINT_IN_TIME_CONSISTENT
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        TaskQueueing: ENABLED
+        TransferMode: ALL
+      Schedule:
+        ScheduleExpression: "cron(30 18 * * ? *)" # Run every day at 6:30 PM UTC
+
+Outputs:
+  VpcId:
+    Description: ID of the created VPC
+    Value:
+      Ref: VPC
+
+  S3BucketName:
+    Description: Name of the created S3 bucket
+    Value:
+      Ref: SourceBucket
+
+  EfsFileSystemId:
+    Description: ID of the created EFS file system
+    Value:
+      Ref: EfsFileSystem
+
+  EfsMountDns:
+    Description: DNS name for the EFS mount
+    Value:
+      Fn::Join:
+        - ""
+        - - Ref: EfsFileSystem
+          - ".efs."
+          - Ref: "AWS::Region"
+          - ".amazonaws.com"
+
+  EC2InstanceId:
+    Description: ID of the EC2 instance
+    Value:
+      Ref: EC2Instance
+
+  EC2PublicDNS:
+    Description: Public DNS name of the EC2 instance
+    Value:
+      Fn::GetAtt: [EC2Instance, PublicDnsName]
+
+  SubnetId:
+    Description: ID of the created subnet
+    Value:
+      Ref: Subnet
+
+  EfsSecurityGroupId:
+    Description: ID of the EFS security group
+    Value:
+      Ref: EfsSecurityGroup
+
+  DataSyncTaskArn:
+    Description: ARN of the created DataSync task
+    Value:
+      Fn::GetAtt: [DataSyncTask, TaskArn]
