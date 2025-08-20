@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <form id="authForm" class="auth-form">
+            <h2>Welcome Back</h2>
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input 
+                    type="email" 
+                    id="email"
+                    name="email" 
+                    required 
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                >
+            </div>
+            <button type="submit" id="submitBtn" name="submitBtn">
+                <span class="button-text">Continue with Email</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- OTP Form (initially hidden) -->
+    <form id="otpForm" class="auth-form" style="display: none;">
+        <h2>Enter Verification Code</h2>
+        <p class="otp-message">We've sent a code to your email</p>
+        <div class="form-group otp-group">
+            <fieldset>
+                <legend>Verification Code</legend>
+                <div class="otp-input-container">
+                    <input type="text" maxlength="1" class="otp-input" id="otp1" name="otp1" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" maxlength="1" class="otp-input" id="otp2" name="otp2" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" maxlength="1" class="otp-input" id="otp3" name="otp3" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" maxlength="1" class="otp-input" id="otp4" name="otp4" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" maxlength="1" class="otp-input" id="otp5" name="otp5" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" maxlength="1" class="otp-input" id="otp6" name="otp6" inputmode="numeric" pattern="[0-9]" required>
+                </div>
+            </fieldset>
+        </div>
+        <button type="submit" id="verifyBtn" name="verifyBtn">
+            <span class="button-text">Verify Code</span>
+        </button>
+        <button type="button" id="resendOtp" name="resendOtp" class="secondary-button">
+            <span class="button-text">Resend Code</span>
+        </button>
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module">
+        import Auth from './auth.js';
+        const auth = new Auth();
+    </script>
+</body>
+</html>

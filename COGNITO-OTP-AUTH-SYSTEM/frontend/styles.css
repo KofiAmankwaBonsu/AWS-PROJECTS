@@ -1,0 +1,244 @@
+/* styles.css */
+:root {
+    --primary-color: #4F46E5;
+    --primary-hover: #4338CA;
+    --error-color: #EF4444;
+    --success-color: #10B981;
+    --background: #F3F4F6;
+    --card-background: #FFFFFF;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --border-color: #E5E7EB;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  body {
+    background: var(--background);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  
+  .auth-form {
+    background: var(--card-background);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .auth-form h2 {
+    color: var(--text-primary);
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+  }
+  
+  input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+  
+  input::placeholder {
+    color: var(--text-secondary);
+  }
+  
+  button {
+    width: 100%;
+    padding: 0.875rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+  }
+  
+  button:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  /* Loading state */
+  button.loading {
+    background: var(--primary-hover);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  
+  /* Error message */
+  .error-message {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+  
+  /* Success message */
+  .success-message {
+    color: var(--success-color);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 480px) {
+    .auth-form {
+      padding: 1.5rem;
+    }
+  
+    .auth-form h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+  }
+  
+  /* Optional: Add a subtle animation when the form appears */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .auth-form {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  /* Custom styling for SweetAlert2 */
+  .swal2-popup {
+    border-radius: 1rem !important;
+    padding: 2rem !important;
+  }
+  
+  .swal2-title {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+  }
+  
+  .swal2-input {
+    border-radius: 0.5rem !important;
+    border: 2px solid var(--border-color) !important;
+    padding: 0.75rem 1rem !important;
+  }
+  
+  .swal2-input:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+  }
+  
+  .swal2-confirm {
+    background: var(--primary-color) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem 1.5rem !important;
+  }
+  
+  .swal2-confirm:focus {
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+  }
+
+.otp-message {
+  text-align: center;
+  color: #6B7280;
+  margin-bottom: 24px;
+}
+
+.otp-input-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.otp-input {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border: 2px solid #D1D5DB;
+  border-radius: 8px;
+  background-color: white;
+  color: #111827;
+  line-height: 1;
+}
+
+.otp-input:focus {
+  border-color: #2563EB;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.secondary-button {
+  background: none;
+  border: none;
+  color: #2563EB;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 12px;
+}
+
+.secondary-button:hover {
+  text-decoration: underline;
+}
+
+/* Make forms transition smoothly */
+
+.auth-form[style*="display: none"] {
+  opacity: 0;
+}
+
+.auth-form:not([style*="display: none"]) {
+  opacity: 1;
+}
+
+  
